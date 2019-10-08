@@ -23,11 +23,11 @@ type IPAccess struct {
 var IPAccessList []IPAccess
 
 //10秒钟只能访问一次
-var Allowance int = 5
+var Allowance int = 60
 var AllowanceTime int64 = 60
 
 func UseMiddleWare(r *gin.Engine) {
-	r.Use(BlackIP(), WhiteIP(), IPRateLimter())
+	r.Use(BlackIP(), IPRateLimter())
 }
 
 //IP访问限制
@@ -41,11 +41,6 @@ func IPRateLimter() gin.HandlerFunc {
 			if ipAccess.IP == ip {
 				ipExist = true
 				//超过时间限制
-				fmt.Print("\n____start__\n")
-				fmt.Print(ipAccess.AllowanceAt.Unix() + AllowanceTime)
-				fmt.Print("\n")
-				fmt.Print(time.Now().Unix())
-				fmt.Print("\n____end___\n")
 				if (ipAccess.AllowanceAt.Unix() + AllowanceTime) < time.Now().Unix() {
 					IPAccessList[index].Allowance = Allowance - 1
 					IPAccessList[index].AllowanceAt = time.Now()
@@ -91,6 +86,7 @@ func WhiteIP() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ipList = []string{
 			"127.0.0.1",
+			"::9001",
 		}
 		flag := false
 		clientIP := c.ClientIP()

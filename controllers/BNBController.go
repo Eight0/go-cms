@@ -12,6 +12,10 @@ import (
 
 var V1HttpServer string = "https://dex.binance.org/api/v1/"
 
+/**
+* curl
+* 返回json数据
+ */
 func responseJSON(c *gin.Context, apiURL string) {
 	req := curl.NewRequest()
 	resp, err := req.SetUrl(apiURL).Get()
@@ -19,12 +23,19 @@ func responseJSON(c *gin.Context, apiURL string) {
 		fmt.Println(err)
 	} else {
 		if resp.IsOk() {
-			c.JSON(200, resp.Body)
+			fmt.Println(resp.Body)
+			c.String(200, resp.Body)
+			//c.JSON(200, gin.H{"data": resp.Body})
 		} else {
 			panic(resp.Raw)
 		}
 	}
 }
+
+/**
+* 返回error
+* 格式json
+ */
 func responseError(c *gin.Context, err string) {
 	c.JSON(201, gin.H{"err": err})
 }
@@ -35,9 +46,14 @@ func responseError(c *gin.Context, err string) {
 func BNBAccount(c *gin.Context) {
 	if address, ok := c.GetQuery("address"); ok {
 		apiURL := V1HttpServer + "account/" + address
-		responseJSON(c, apiURL)
+		if len(address) > 0 {
+			responseJSON(c, apiURL)
+		} else {
+			responseError(c, "address is none")
+		}
+
 	} else {
-		responseError(c, "address is none")
+		responseError(c, "need address params")
 	}
 
 }
@@ -51,7 +67,7 @@ func BNBTx(c *gin.Context) {
 }
 
 /**
-* 获取币安代币
+ * 获取币安代币
  */
 func BNBTokens(c *gin.Context) {
 	apiURL := V1HttpServer + "tokens"
@@ -61,7 +77,32 @@ func BNBTokens(c *gin.Context) {
 /**
 * 获取账户交易历史
  */
-func BTNTransactions(c *gin.Context) {
+func BNBTransactions(c *gin.Context) {
 	apiURL := V1HttpServer + "/transactions?address=bnb1jxfh2g85q3v0tdq56fnevx6xcxtcnhtsmcu64m&limit=10&txAsset=BNB"
 	responseJSON(c, apiURL)
+}
+
+/**
+* 获取账户余额
+ */
+func BNBBalance(c *gin.Context) {
+	if address, ok := c.GetQuery("address"); ok {
+		apiURL := V1HttpServer + "balance?address=" + address
+		responseJSON(c, apiURL)
+	} else {
+		responseError(c, "address can not be none")
+	}
+}
+
+/**
+* 广播交易
+* broadcast tx
+ */
+func BNBBroadcastTx(c *gin.Context) {
+	if tx, ok := c.GetQuery("tx"); ok {
+		apiURL := V1HttpServer + "/broadcast?tx=" + tx
+		responseJSON(c, apiURL)
+	} else {
+		responseError(c, "tx can not be none")
+	}
 }
